@@ -19,7 +19,7 @@ public class OSMDataDownloader {
         this.delta_in_degrees = delta_in_degrees;
     }
 
-    private String getOverpassUrl() throws UnsupportedEncodingException {
+    public String getOverpassUrl() throws UnsupportedEncodingException {
         //TODO - check for crossing 180, check for negative latitudes/longitudes
         String lower_bottom_corner = (latitude_of_center-delta_in_degrees) + "," + (longitude_of_center-delta_in_degrees);
         String upper_right_corner = (latitude_of_center+delta_in_degrees) + "," + (longitude_of_center+delta_in_degrees);
@@ -27,7 +27,7 @@ public class OSMDataDownloader {
         return "http://overpass-api.de/api/interpreter?data=" + URLEncoder.encode("(node("+bb+");<;);out meta;", "UTF-8");
     }
 
-    private String getCacheFilename(){
+    public String getCacheFilename(){
         return latitude_of_center+","+longitude_of_center+"("+delta_in_degrees+")"+".osm";
     }
 
