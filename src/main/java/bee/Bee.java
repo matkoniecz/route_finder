@@ -1,13 +1,13 @@
-package tsa;
+package bee;
 
 public class Bee {
-	public int status;		// 0 - inactive, 1 - active, 2 - scout  // TODO Change it to enumeration value later
+	public Status status;
 	public char[] memoryMatrix;	//representation of solution for bees
 	public double measureOfQuality; //representation of how good is the solution the bee's has
 									// while for "komiwojazer" it's simply length of path, for us it will be slightly more complicated
 	public int numberOfVisits;
 	
-	public Bee(int status, char[] memoryMatrix, double measureOfQuality, int numberOfVisits){
+	public Bee(Status status, char[] memoryMatrix, double measureOfQuality, int numberOfVisits){
 		this.status = status;
 		this.memoryMatrix = new char[memoryMatrix.length];
 		this.memoryMatrix = memoryMatrix.clone();
@@ -27,5 +27,5 @@ public class Bee {
 		s += " Number visits = " + this.numberOfVisits;
 		return s;
 	}
-	
+
 }

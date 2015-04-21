@@ -1,5 +1,5 @@
-import tsa.CitiesData;
-import tsa.Hive;
+import bee.CitiesData;
+import bee.Hive;
 
 public class TestBee {
 

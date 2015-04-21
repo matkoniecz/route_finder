@@ -1,4 +1,4 @@
-package tsa;
+package bee;
 
 import java.util.Random;
 
@@ -20,7 +20,7 @@ public class Hive {
 	int maxNumberCycles = 3460;
 											//everything public for now
 	
-	public double probPersuasion = 0.9;		// ?? ... ?? TODO Understand this
+	public double probPersuasion = 0.9;		// probability that inactive bee will use better solution presented during DoWaggleDance
 											// generally though this is another value to play around with to find a better solution
 											// if value is increased new solution can be found quicker
 											// at risk of converging to non-optimal solution though
@@ -36,7 +36,7 @@ public class Hive {
 	
 	
 	public Hive(CitiesData citiesData){
-		this.random = new Random();
+		random = new Random();
 		
 		this.citiesData = citiesData;
 		
@@ -47,15 +47,16 @@ public class Hive {
 		this.indexesOfInactiveBees = new int[numberInactive];
 		
 		for(int i = 0; i < totalNumberBees; i++){
-			int currStatus;
+			Status currStatus;
 			if(i < numberInactive){			// on init all "numberInactive" first bees getting inactive status
-				currStatus = 0;
+				currStatus = Status.INACTIVE;
 				indexesOfInactiveBees[i] = i;  // inactive
 			}
-			else if (i < numberInactive + numberScout)
-				currStatus = 2; //scout
-			else
-				currStatus = 1; //active
+			else if (i < numberInactive + numberScout) {
+				currStatus = Status.SCOUT;
+			} else {
+				currStatus = Status.ACTIVE;
+			}
 			
 			char[] randomMemoryMatrix = GenerateRandomMemeoryMatrix();
 			double mq = MeasureOfQuality(randomMemoryMatrix);
@@ -67,13 +68,12 @@ public class Hive {
 				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
 			}
-			
 		}
 	}	
 	
 	public Hive(int totalNumberBees, int numberInactive, int numberActive, int numberScout,
 			int maxNumberVisits, int maxNumberCycles, CitiesData citiesData){
-		this.random = new Random();
+		random = new Random();
 		
 		this.totalNumberBees = totalNumberBees;
 		this.numberInactive = numberInactive;
@@ -81,7 +81,7 @@ public class Hive {
 		this.numberScout = numberScout;
 		this.maxNumberVisits = maxNumberVisits;
 		this.maxNumberCycles = maxNumberCycles;
-		
+
 		this.citiesData = citiesData;
 		
 		this.bees = new Bee[totalNumberBees];
@@ -91,15 +91,16 @@ public class Hive {
 		this.indexesOfInactiveBees = new int[numberInactive];
 		
 		for(int i = 0; i < totalNumberBees; i++){
-			int currStatus;
+			Status currStatus;
 			if(i < numberInactive){			// on init all "numberInactive" first bees getting inactive status
-				currStatus = 0;
+				currStatus = Status.INACTIVE;
 				indexesOfInactiveBees[i] = i;  // inactive
 			}
-			else if (i < numberInactive + numberScout)
-				currStatus = 2; //scout
-			else
-				currStatus = 1; //active
+			else if (i < numberInactive + numberScout) {
+				currStatus = Status.SCOUT;
+			} else {
+				currStatus = Status.ACTIVE;
+			}
 			
 			char[] randomMemoryMatrix = GenerateRandomMemeoryMatrix();
 			double mq = MeasureOfQuality(randomMemoryMatrix);
@@ -110,9 +111,8 @@ public class Hive {
 			if(bees[i].measureOfQuality < bestMeasureOfQuality){
 				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
-			}		
-		}		// loop for ends here
-		
+			}
+		}
 	}
 	
 	public String ToString(){
@@ -129,8 +129,7 @@ public class Hive {
 	public char[] GenerateRandomMemeoryMatrix() {	// generate random solution
 													// in this case it basically takes the array of cities and swaps it around "length" times
 													// we naturally need a different way
-		char[] result = new char[this.citiesData.cities.length];
-		result = this.citiesData.cities.clone();
+		char[] result = this.citiesData.cities.clone();
 		
 		for(int i = 0; i< result.length; i++){
 			int r = random.nextInt(result.length);
@@ -142,16 +141,16 @@ public class Hive {
 	}
 	
 	public char[] GenerateNeighborMemoryMatrix(char[] memoryMatrix){	// generate a solution based on neighbor solution
-		char[] result = new char[memoryMatrix.length];
-		result = memoryMatrix.clone();
+		char[] result = memoryMatrix.clone();
 		
 		int ranIndex = random.nextInt(result.length);
 		int adjIndex = 0;
 		
-		if(ranIndex == result.length -1)
+		if(ranIndex == result.length -1) {
 			adjIndex = 0;
-		else
+		} else {
 			adjIndex = ranIndex + 1;
+		}
 		
 		char tmp = result[ranIndex];			// once again a simple change between two cities
 		result[ranIndex] = result[adjIndex];	// for us it will be the change of one point and following that everything will change
@@ -186,21 +185,24 @@ public class Hive {
 		int cycle = 0;
 		
 		while (cycle < this.maxNumberCycles){
-			for(int i = 0; i<totalNumberBees; i++){
-				if(this.bees[i].status == 1)
+			for(int i = 0; i<totalNumberBees; i++) {
+				if (this.bees[i].status == Status.ACTIVE) {
 					ProcessActiveBee(i);
-				else if (this.bees[i].status == 2)
+				} else if (this.bees[i].status == Status.SCOUT) {
 					ProcessScoutBee(i);
-				else if (this.bees[i].status == 0)
-					ProcessInactiveBee(i);
+				} else if (this.bees[i].status == Status.INACTIVE) {
+					//do nothing
+				}
 			}
 			++ cycle;
 			
-			if(pb && cycle%increment == 0)
+			if(pb && cycle%increment == 0) {
 				System.out.print("^");
+			}
 		}
-		if(pb)
-			System.out.println("");	
+		if(pb) {
+			System.out.println("");
+		}
 	}
 	
 	//Three helper methods for solve
@@ -217,8 +219,7 @@ public class Hive {
 				++bees[i].numberOfVisits;
 				if(bees[i].numberOfVisits > maxNumberVisits)
 					numberOfVisitsOverLimit = true;
-			}
-			else{	// no mistake
+			}else{	// no mistake
 				bees[i].memoryMatrix = neighbor.clone();
 				bees[i].measureOfQuality = neighborQuality;
 				bees[i].numberOfVisits = 0;
@@ -239,14 +240,14 @@ public class Hive {
 			}
 		}
 		
-		if(numberOfVisitsOverLimit == true){
-			bees[i].status = 0; // set to inactive
+		if(numberOfVisitsOverLimit){
+			bees[i].status = Status.INACTIVE;
 			bees[i].numberOfVisits = 0;
 			int x = random.nextInt(numberInactive);
-			bees[indexesOfInactiveBees[x]].status = 1;
+			bees[indexesOfInactiveBees[x]].status = Status.ACTIVE;
 			indexesOfInactiveBees[x] = i;
 		}
-		else if (memoryWasUpdated == true){
+		else if (memoryWasUpdated){
 			if(bees[i].measureOfQuality < this.bestMeasureOfQuality){		//this kind of doesn't make sense
 				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();		// or no wait, it does make sense because the lower the better
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
@@ -271,10 +272,6 @@ public class Hive {
 			DoWaggleDance(i);
 		}
 		
-	}
-	
-	private void ProcessInactiveBee(int i){
-		return;
 	}
 	
 	private void DoWaggleDance(int i){		// simulates a process of bee returning to the hive

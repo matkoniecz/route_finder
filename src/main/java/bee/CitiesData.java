@@ -1,4 +1,4 @@
-package tsa;
+package bee;
 
 public class CitiesData {
 	
@@ -13,10 +13,11 @@ public class CitiesData {
 	}
 	
 	public double Distance(char firstCity, char secondCity){
-		if(firstCity < secondCity)
-			return 1.0* ((int)secondCity - (int)firstCity);
-		else
-			return 1.5* ((int)firstCity - (int)secondCity);
+		if(firstCity < secondCity) {
+			return 1.0 * ((int) secondCity - (int) firstCity);
+		} else {
+			return 1.5 * ((int) firstCity - (int) secondCity);
+		}
 	}
 	
 	public double ShortestPathLenght(){
@@ -26,16 +27,18 @@ public class CitiesData {
 	public long NumberOfPossiblePaths(){
 		long n = this.cities.length;
 		long answer = 1;
-		for(int i = 1; i<= n; i++)
+		for(int i = 1; i<= n; i++) {
 			answer *= i;
+		}
 		return answer;
 	}
 	
 	public String ToString(){
 		String s = "";
 		s += "Cities: ";
-		for (int i = 0; i < this.cities.length; i++)
+		for (int i = 0; i < this.cities.length; i++) {
 			s += this.cities[i] + " ";
+		}
 		return s;
 	}
 	
