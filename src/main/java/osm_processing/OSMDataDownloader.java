@@ -19,6 +19,7 @@ public class OSMDataDownloader {
         this.latitude_of_center = latitude_of_center;
         this.longitude_of_center = longitude_of_center;
         this.delta_in_degrees = delta_in_degrees;
+        GetData();
     }
 
     public String getOverpassUrl() throws UnsupportedEncodingException {

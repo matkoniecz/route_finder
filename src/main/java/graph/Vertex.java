@@ -1,11 +1,11 @@
 package graph;
 
+import osm_processing.Coordinate;
+
 public class Vertex {
-    public Double lat;
-    public Double lon;
+    public Coordinate location;
 
     public Vertex(Double lat, Double lon) {
-        this.lat = lat;
-        this.lon = lon;
+        location = new Coordinate(lat, lon);
     }
 }
