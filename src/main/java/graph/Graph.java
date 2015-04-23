@@ -11,8 +11,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class Graph {
     HashMap<Long, Vertex> nodes;
@@ -20,9 +22,11 @@ public class Graph {
     public Graph(String pathToOSMXmlFile){
         nodes = new HashMap<>();
         ways = new HashMap<>();
+        HashMap<Long, Edge> potential_ways = new HashMap<>();
+        HashMap<String, String> tags = new HashMap<>();
         Boolean nodes_processed = false;
         Long previous_node = null;
-        Long id = null;
+        Long id;
         Long fake_way_id = Long.parseLong("0");
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
@@ -47,6 +51,22 @@ public class Graph {
                             break;
                         }
                         case "way":
+                            List<String> roads = Arrays.asList("cycleway", "footway", "living_street", "path",
+                                    "pedestrian", "primary", "primary_link", "residential", "road", "secondary",
+                                    "secondary_link", "service", "steps", "tertiary", "tertiary_link", "track", "trunk",
+                                    "trunk_link", "unclassified");
+                            //new way, process old one
+                            if(potential_ways.size()>0){
+                                //System.out.println(tags);
+                                if(tags.containsKey("highway")){
+                                    if(roads.contains(tags.get("highway"))){
+                                        ways.putAll(potential_ways);
+                                    }
+                                }
+                            }
+                            potential_ways = new HashMap<>();
+                            tags = new HashMap<>();
+
                             //System.out.println(type);
                             id = new Long(startElement.getAttributeByName(new QName("id")).getValue());
                             previous_node = null;
@@ -58,20 +78,19 @@ public class Graph {
                             //System.out.println(previous_node);
                             //System.out.println(node_id);
                             if (previous_node != null) {
-                                ways.put(fake_way_id++, new Edge(previous_node, node_id, nodes));
-                                ways.put(fake_way_id++, new Edge(node_id, previous_node, nodes));
+                                potential_ways.put(fake_way_id++, new Edge(previous_node, node_id, nodes));
+                                potential_ways.put(fake_way_id++, new Edge(node_id, previous_node, nodes));
                             }
                             previous_node = node_id;
                             break;
                         }
                         case "tag":
-                            //TODO add only ways with highway type
+                            String k = startElement.getAttributeByName(new QName("k")).getValue();
+                            String v = startElement.getAttributeByName(new QName("v")).getValue();
+                            //System.out.println(k + " " + v);
+                            tags.put(k, v);
                             break;
                     }
-                    xmlEvent = xmlEventReader.nextEvent();
-                }
-                if(xmlEvent.isEndElement()){
-                    //end element is reached
                 }
             }
 
@@ -116,7 +135,7 @@ public class Graph {
 
     public static String getColor(int percent) {
         //from http://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter
-        System.out.println(percent/100.0);
+        //System.out.println(percent/100.0);
         double H = percent/100.0*0.4; // Hue (note 0.4 = Green, see huge chart below)
         double S = 0.9; // Saturation
         double B = 0.9; // Brightness
@@ -153,7 +172,7 @@ public class Graph {
                 "\t<script>\n" +
                 "\t\tvar map = L.map('map').setView([50, 20], 18);\n" +
                 "\t\tmapLink = '<a href=\"http://openstreetmap.org\">OpenStreetMap</a>';\n"+
-                getBLackAndWhiteMapTiles();
+                getOSMDefaultStyleTiles();
     }
     private String getOSMDefaultStyleTiles() {
         return  "\t\tL.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n" +
