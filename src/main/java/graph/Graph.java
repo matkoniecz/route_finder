@@ -24,14 +24,10 @@ public class Graph {
         ways = new HashMap<>();
         HashMap<Long, Edge> potential_ways = new HashMap<>();
         HashMap<String, String> tags = new HashMap<>();
-        Boolean nodes_processed = false;
         Long previous_node = null;
         Long id;
         Long fake_way_id = Long.parseLong("0");
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-
-        //tmp
-        //tmp
 
         try {
             XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(new FileInputStream(pathToOSMXmlFile));
@@ -70,7 +66,6 @@ public class Graph {
                             //System.out.println(type);
                             id = new Long(startElement.getAttributeByName(new QName("id")).getValue());
                             previous_node = null;
-                            nodes_processed = true;
                             break;
                         case "nd": {
                             //System.out.println(type);
@@ -78,8 +73,8 @@ public class Graph {
                             //System.out.println(previous_node);
                             //System.out.println(node_id);
                             if (previous_node != null) {
-                                potential_ways.put(fake_way_id++, new Edge(previous_node, node_id, nodes));
-                                potential_ways.put(fake_way_id++, new Edge(node_id, previous_node, nodes));
+                                potential_ways.put(fake_way_id++, new Edge(previous_node, node_id, tags, nodes));
+                                potential_ways.put(fake_way_id++, new Edge(node_id, previous_node, tags, nodes));
                             }
                             previous_node = node_id;
                             break;
@@ -103,12 +98,12 @@ public class Graph {
         PrintWriter writer = new PrintWriter(filename, "UTF-8");
         writer.print(getLeafletHeader());
         //TODO - is there any nicer way to find max and min?
-        Double max = -1.0;
-        Double min = 1000000000.0;
+        Integer max = -1;
+        Integer min = 1000000000;
         for(Edge e: ways.values()){
-            if(e.length != null){
-                max = Math.max(max, e.length);
-                min = Math.min(min, e.length);
+            if(e.rateWay() != null){
+                max = Math.max(max, e.rateWay());
+                min = Math.min(min, e.rateWay());
             }
         }
         for(Edge e: ways.values()){
@@ -119,7 +114,7 @@ public class Graph {
                 Double from_lon = nodes.get(e.from).location.longitude;
                 Double to_lat = nodes.get(e.to).location.latitude;
                 Double to_lon = nodes.get(e.to).location.longitude;
-                Integer rescaled = (int) (100 * ((e.length-min)/(max-min)));
+                Integer rescaled = (100 * ((e.rateWay()-min)/(max-min)));
                 String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\"}).addTo(map); //"+e.from + " to " + e.to;
                 //System.out.println(polyline);
                 writer.println(polyline);
@@ -135,7 +130,7 @@ public class Graph {
 
     public static String getColor(int percent) {
         //from http://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter
-        //System.out.println(percent/100.0);
+        System.out.println(percent/100.0);
         double H = percent/100.0*0.4; // Hue (note 0.4 = Green, see huge chart below)
         double S = 0.9; // Saturation
         double B = 0.9; // Brightness
