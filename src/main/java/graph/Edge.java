@@ -1,15 +1,14 @@
 package graph;
 
-import osm_processing.Coordinate;
 import osm_processing.DistanceCalculator;
 
 import java.util.HashMap;
 
 public class Edge {
-    Long from;
-    Long to;
-    HashMap<String, String> tags;
-    Double length;
+    public Long from;
+    public Long to;
+    public HashMap<String, String> tags;
+    public Double lengthInKilometers;
 
     public Edge(Long from, Long to, HashMap<String, String> tags, HashMap<Long, Vertex> nodes) {
         this.from = from;
@@ -18,9 +17,9 @@ public class Edge {
         Vertex from_node = nodes.get(from);
         Vertex to_node = nodes.get(to);
         if(from_node == null || to_node == null){
-            length = null;
+            lengthInKilometers = null;
         } else {
-            length = DistanceCalculator.getDistanceBetweenCoordinates(from_node.location, to_node.location);
+            lengthInKilometers = DistanceCalculator.getDistanceBetweenCoordinatesInKilometers(from_node.location, to_node.location);
         }
 
     }

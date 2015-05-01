@@ -12,7 +12,7 @@ public class TestBeeOnSalesman {
 		System.out.println(citiesData.ToString());
 		System.out.println("Number of cities = " + citiesData.cities.length);
 		System.out.println("Number of possible paths = " + citiesData.NumberOfPossiblePaths());
-		System.out.println("Best possible solution (shortest path) length = " + citiesData.ShortestPathLength());
+		System.out.println("Best possible solution (shortest path) legth = " + citiesData.ShortestPathLength());
 		
 		Hive hive = new Hive(citiesData);
 		System.out.println("\nInitial random hive");

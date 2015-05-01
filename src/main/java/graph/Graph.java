@@ -11,18 +11,104 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 public class Graph {
-    HashMap<Long, Vertex> nodes;
-    HashMap<Long, Edge> ways;
-    public Graph(String pathToOSMXmlFile){
+    public HashMap<Long, Vertex> nodes;
+    public HashMap<Long, Edge> ways;
+    public Graph(){
         nodes = new HashMap<>();
         ways = new HashMap<>();
-        HashMap<Long, Edge> potential_ways = new HashMap<>();
+    }
+
+    public Graph findPath(Long nodeA, Long nodeB){
+        class Entry implements Comparable{
+            Long nodeId;
+            double distance;
+
+            public Entry(Long nodeId, double distance) {
+                this.nodeId = nodeId;
+                this.distance = distance;
+            }
+
+            @Override
+            public int compareTo(Object o) {
+                if(!(o instanceof Entry)){
+                    throw new IllegalArgumentException();
+                }
+                Entry alien = (Entry) o;
+                if(distance < alien.distance){
+                    return -1;
+                }
+                if(distance == alien.distance){
+                    return 0;
+                }
+                return 1;
+            }
+        }
+        HashMap<Long, Double> distance =  new HashMap<>();
+        HashMap<Long, Edge> prev =  new HashMap<>();
+        PriorityQueue<Entry> potential = new PriorityQueue<>();
+        distance.put(nodeA, 0.0);
+        prev.put(nodeA, null);
+        potential.add(new Entry(nodeA, 0));
+        while(potential.size()>0){
+            Entry candidate = potential.peek();
+            potential.remove(candidate);
+            if(nodes.get(candidate.nodeId)==null){
+                continue;
+            }
+            for(Edge e: nodes.get(candidate.nodeId).outgoingWays){
+                if(e.lengthInKilometers == null){
+                    continue;
+                }
+                if(e.from.equals(candidate.nodeId)){
+                    boolean update = false;
+                    double newPotentialLength = candidate.distance + e.lengthInKilometers;
+                    if(!distance.containsKey(e.to)){
+                        update = true;
+                    } else {
+                        if(distance.get(e.to)>newPotentialLength){
+                            update = true;
+                        }
+                    }
+                    if(update){
+                        distance.put(e.to, newPotentialLength);
+                        prev.put(e.to, e);
+                        potential.add(new Entry(e.to, newPotentialLength));
+                    }
+                }
+            }
+        }
+        if(!distance.containsKey(nodeB)){
+            return null;
+        }
+        Graph returned = new Graph();
+        Long node = nodeB;
+        Edge toNode = null;
+        Long fakeWayId = (long) 0;
+        while(true){
+            toNode = prev.get(node);
+            if(toNode == null){
+                if(!node.equals(nodeA)){
+                    throw new AssertionError();
+                }
+                break;
+            }
+            returned.ways.put(fakeWayId, toNode);
+            fakeWayId++;
+            returned.nodes.put(node, this.nodes.get(node));
+            node = toNode.from;
+        }
+        returned.nodes.put(node, this.nodes.get(node));
+        return returned;
+    }
+
+    public Graph(String pathToOSMXmlFile){
+        this();
+
+        HashMap<Long, Edge> potentialWays = new HashMap<>();
         HashMap<String, String> tags = new HashMap<>();
         Long previous_node = null;
         Long id;
@@ -52,15 +138,20 @@ public class Graph {
                                     "secondary_link", "service", "steps", "tertiary", "tertiary_link", "track", "trunk",
                                     "trunk_link", "unclassified");
                             //new way, process old one
-                            if(potential_ways.size()>0){
+                            if(potentialWays.size()>0){
                                 //System.out.println(tags);
                                 if(tags.containsKey("highway")){
                                     if(roads.contains(tags.get("highway"))){
-                                        ways.putAll(potential_ways);
+                                        ways.putAll(potentialWays);
+                                        for(Edge way: potentialWays.values()){
+                                            if(nodes.get(way.from) != null){
+                                                nodes.get(way.from).outgoingWays.add(way);
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            potential_ways = new HashMap<>();
+                            potentialWays = new HashMap<>();
                             tags = new HashMap<>();
 
                             //System.out.println(type);
@@ -73,8 +164,8 @@ public class Graph {
                             //System.out.println(previous_node);
                             //System.out.println(node_id);
                             if (previous_node != null) {
-                                potential_ways.put(fake_way_id++, new Edge(previous_node, node_id, tags, nodes));
-                                potential_ways.put(fake_way_id++, new Edge(node_id, previous_node, tags, nodes));
+                                potentialWays.put(fake_way_id++, new Edge(previous_node, node_id, tags, nodes));
+                                potentialWays.put(fake_way_id++, new Edge(node_id, previous_node, tags, nodes));
                             }
                             previous_node = node_id;
                             break;
@@ -94,8 +185,17 @@ public class Graph {
         }
     }
 
-    public void generateLeafletHtmlView(String filename) throws FileNotFoundException, UnsupportedEncodingException {
-        PrintWriter writer = new PrintWriter(filename, "UTF-8");
+    public void generateLeafletHtmlView(String filename) {
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(filename, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new AssertionError(e);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException(e);
+        }
         writer.print(getLeafletHeader());
         //TODO - is there any nicer way to find max and min?
         Integer max = -1;
@@ -114,7 +214,10 @@ public class Graph {
                 Double from_lon = nodes.get(e.from).location.longitude;
                 Double to_lat = nodes.get(e.to).location.latitude;
                 Double to_lon = nodes.get(e.to).location.longitude;
-                Integer rescaled = (100 * ((e.rateWay()-min)/(max-min)));
+                Integer rescaled = 100;
+                if(!Objects.equals(max, min)){
+                    rescaled = (100 * ((e.rateWay()-min)/(max-min)));
+                }
                 String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\"}).addTo(map); //"+e.from + " to " + e.to;
                 //System.out.println(polyline);
                 writer.println(polyline);
@@ -130,7 +233,7 @@ public class Graph {
 
     public static String getColor(int percent) {
         //from http://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter
-        System.out.println(percent/100.0);
+        //System.out.println(percent/100.0);
         double H = percent/100.0*0.4; // Hue (note 0.4 = Green, see huge chart below)
         double S = 0.9; // Saturation
         double B = 0.9; // Brightness
@@ -165,7 +268,7 @@ public class Graph {
                 "\n" +
                 "\t<script src=\"http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js\"></script>\n" +
                 "\t<script>\n" +
-                "\t\tvar map = L.map('map').setView([50, 20], 18);\n" +
+                "\t\tvar map = L.map('map').setView([50, 20], 15);\n" +
                 "\t\tmapLink = '<a href=\"http://openstreetmap.org\">OpenStreetMap</a>';\n"+
                 getOSMDefaultStyleTiles();
     }

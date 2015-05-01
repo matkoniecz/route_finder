@@ -6,8 +6,8 @@ public final class DistanceCalculator {
     private DistanceCalculator() {
     }
 
-    public static double getDistanceBetweenCoordinates(Coordinate loc1, Coordinate loc2) {
-        return getDistanceBetweenCoordinates(loc1.latitude, loc1.longitude, loc2.latitude, loc2.longitude);
+    public static double getDistanceBetweenCoordinatesInKilometers(Coordinate loc1, Coordinate loc2) {
+        return getDistanceBetweenCoordinatesInKilometers(loc1.latitude, loc1.longitude, loc2.latitude, loc2.longitude);
     }
 
     /**
@@ -22,7 +22,7 @@ public final class DistanceCalculator {
      * @param lon2 longitude of the second point
      * @return Distance between points, in kilometers
      */
-    public static double getDistanceBetweenCoordinates(double lat1, double lon1, double lat2, double lon2) {
+    public static double getDistanceBetweenCoordinatesInKilometers(double lat1, double lon1, double lat2, double lon2) {
         lat1 = Math.toRadians(lat1);
         lon1 = Math.toRadians(lon1);
         lat2 = Math.toRadians(lat2);
