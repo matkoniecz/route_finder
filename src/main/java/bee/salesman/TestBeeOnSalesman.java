@@ -1,7 +1,9 @@
-import bee.CitiesData;
+package bee.salesman;
+
+import bee.salesman.CitiesData;
 import bee.Hive;
 
-public class TestBee {
+public class TestBeeOnSalesman {
 
 	public static void main(String[] args){
 		System.out.println("\nBegin Simulated Bee Colony algorithm\n");

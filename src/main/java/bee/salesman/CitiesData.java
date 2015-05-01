@@ -1,4 +1,7 @@
-package bee;
+package bee.salesman;
+
+import bee.Problem;
+import bee.Solution;
 
 import java.util.Random;
 
