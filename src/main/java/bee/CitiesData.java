@@ -1,6 +1,8 @@
 package bee;
 
-public class CitiesData {
+import java.util.Random;
+
+public class CitiesData implements Problem {
 	
 	public char[] cities;
 	
@@ -12,16 +14,16 @@ public class CitiesData {
 		}
 	}
 	
-	public double Distance(char firstCity, char secondCity){
+	public Integer Distance(char firstCity, char secondCity){
 		if(firstCity < secondCity) {
-			return 1.0 * ((int) secondCity - (int) firstCity);
+			return 2 * ((int) secondCity - (int) firstCity);
 		} else {
-			return 1.5 * ((int) firstCity - (int) secondCity);
+			return 3 * ((int) firstCity - (int) secondCity);
 		}
 	}
 	
-	public double ShortestPathLenght(){
-		return 1.0*(this.cities.length-1);
+	public Integer ShortestPathLength(){
+		return 2*(this.cities.length-1);
 	}
 	
 	public long NumberOfPossiblePaths(){
@@ -41,6 +43,20 @@ public class CitiesData {
 		}
 		return s;
 	}
-	
+
+	@Override
+	public Solution getRandomSolution() {
+		Random random = new Random();
+		// in this case it basically takes the array of cities and swaps it around "length" times
+		char[] result = this.cities.clone();
+
+		for(int i = 0; i< result.length; i++){
+			int r = random.nextInt(result.length);
+			char temp = result[r];
+			result[r] = result[i];
+			result[i] = temp;
+		}
+		return new CitiesSolution(result, this);
+	}
 }
 	

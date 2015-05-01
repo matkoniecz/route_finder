@@ -6,7 +6,7 @@ public class Hive {
 
 	static Random random;
 	
-	public CitiesData citiesData;			// problem that is being solved
+	public Problem problem;			        // problem that is being solved
 											// ??optimal values are active 75%, inactive 10%, scout 15%??
 	int totalNumberBees = 100; 				// each bee present solution		
 	int numberInactive = 20;				// so in theory the more bees the better solution we get
@@ -27,52 +27,20 @@ public class Hive {
 	public double probMistake = 0.01;		// something similiar - another value to play around with and see what happens
 	
 	public Bee[] bees;
-	public char[] bestMemoryMatrix;			// best solution that "super bee" brought
-	public double bestMeasureOfQuality;		// a value to compare with
+	public Solution bestSolution;			// bestSolution solution that "super bee" brought
+	public Integer bestMeasureOfQuality;		// a value to compare with
 	public int[] indexesOfInactiveBees;		// makes it easier to check which bees are "slacking off" //are inactive 
 											// [3,4,7] - means 3,4,7 are inactive
 											// it's not that [0,1,0,1,0] - 1 3 5 are inactive
 											// in the end though both would work, right now first is implemented
 	
 	
-	public Hive(CitiesData citiesData){
-		random = new Random();
-		
-		this.citiesData = citiesData;
-		
-		this.bees = new Bee[totalNumberBees];
-		this.bestMemoryMatrix = GenerateRandomMemeoryMatrix();
-		this.bestMeasureOfQuality = MeasureOfQuality(this.bestMemoryMatrix);
-		
-		this.indexesOfInactiveBees = new int[numberInactive];
-		
-		for(int i = 0; i < totalNumberBees; i++){
-			Status currStatus;
-			if(i < numberInactive){			// on init all "numberInactive" first bees getting inactive status
-				currStatus = Status.INACTIVE;
-				indexesOfInactiveBees[i] = i;  // inactive
-			}
-			else if (i < numberInactive + numberScout) {
-				currStatus = Status.SCOUT;
-			} else {
-				currStatus = Status.ACTIVE;
-			}
-			
-			char[] randomMemoryMatrix = GenerateRandomMemeoryMatrix();
-			double mq = MeasureOfQuality(randomMemoryMatrix);
-			int numberOfVisits = 0;
-			
-			bees[i] = new Bee(currStatus, randomMemoryMatrix, mq, numberOfVisits);
-			
-			if(bees[i].measureOfQuality < bestMeasureOfQuality){
-				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();
-				this.bestMeasureOfQuality = bees[i].measureOfQuality;
-			}
-		}
-	}	
+	public Hive(Problem problem){
+		this(100, 20, 50, 30, 100, 3460, problem);
+	}
 	
 	public Hive(int totalNumberBees, int numberInactive, int numberActive, int numberScout,
-			int maxNumberVisits, int maxNumberCycles, CitiesData citiesData){
+			int maxNumberVisits, int maxNumberCycles, Problem problem){
 		random = new Random();
 		
 		this.totalNumberBees = totalNumberBees;
@@ -82,12 +50,12 @@ public class Hive {
 		this.maxNumberVisits = maxNumberVisits;
 		this.maxNumberCycles = maxNumberCycles;
 
-		this.citiesData = citiesData;
-		
+		this.problem = problem;
+
 		this.bees = new Bee[totalNumberBees];
-		this.bestMemoryMatrix = GenerateRandomMemeoryMatrix();
-		this.bestMeasureOfQuality = MeasureOfQuality(this.bestMemoryMatrix);
-		
+		this.bestSolution = problem.getRandomSolution();
+		this.bestMeasureOfQuality = this.bestSolution.fitnessGreaterIsBetter();
+
 		this.indexesOfInactiveBees = new int[numberInactive];
 		
 		for(int i = 0; i < totalNumberBees; i++){
@@ -101,15 +69,15 @@ public class Hive {
 			} else {
 				currStatus = Status.ACTIVE;
 			}
-			
-			char[] randomMemoryMatrix = GenerateRandomMemeoryMatrix();
-			double mq = MeasureOfQuality(randomMemoryMatrix);
+
+			Solution randomSolution = problem.getRandomSolution();
+			Integer mq = randomSolution.fitnessGreaterIsBetter();
 			int numberOfVisits = 0;
-			
-			bees[i] = new Bee(currStatus, randomMemoryMatrix, mq, numberOfVisits);
-			
-			if(bees[i].measureOfQuality < bestMeasureOfQuality){
-				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();
+
+			bees[i] = new Bee(currStatus, randomSolution, mq, numberOfVisits);
+
+			if(bees[i].measureOfQuality > bestMeasureOfQuality){
+				this.bestSolution = bees[i].solution.clone();
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
 			}
 		}
@@ -117,62 +85,13 @@ public class Hive {
 	
 	public String ToString(){
 		String s = "";
-		s += "Path: ";
-		for(int i = 0; i < this.bestMemoryMatrix.length - 1; i++)
-			s += this.bestMemoryMatrix[i] + "->";
-		s += this.bestMemoryMatrix[this.bestMemoryMatrix.length-1];
+		s += "Solution: ";
+		s += bestSolution.ToString();
 		s += "\nQuality of solution: " + this.bestMeasureOfQuality;
 		return s;
 	}	
 	
-	// three important functions for SBC, this to change
-	public char[] GenerateRandomMemeoryMatrix() {	// generate random solution
-													// in this case it basically takes the array of cities and swaps it around "length" times
-													// we naturally need a different way
-		char[] result = this.citiesData.cities.clone();
-		
-		for(int i = 0; i< result.length; i++){
-			int r = random.nextInt(result.length);
-			char temp = result[r];
-			result[r] = result[i];
-			result[i] = temp;
-		}
-		return result;		
-	}
-	
-	public char[] GenerateNeighborMemoryMatrix(char[] memoryMatrix){	// generate a solution based on neighbor solution
-		char[] result = memoryMatrix.clone();
-		
-		int ranIndex = random.nextInt(result.length);
-		int adjIndex = 0;
-		
-		if(ranIndex == result.length -1) {
-			adjIndex = 0;
-		} else {
-			adjIndex = ranIndex + 1;
-		}
-		
-		char tmp = result[ranIndex];			// once again a simple change between two cities
-		result[ranIndex] = result[adjIndex];	// for us it will be the change of one point and following that everything will change
-												// I think that there will be a need for an extra method that generates the way not only from the start but from any given point while saving what was before that
-												// not that this method will differ that much from generate random way method
-												// still in our case in this place we will be calling it here
-		result[adjIndex] = tmp;
-		
-		return result;
-	}
-	
-	public double MeasureOfQuality(char[] memoryMatrix){	// compete measure of quality, "fajnosc"
-		double answer = 0.0;
-		for(int i = 0; i < memoryMatrix.length - 1; i++){	// sigh... for komiwojazer it's so easy
-			char c1 = memoryMatrix[i];						
-			char c2 = memoryMatrix[i+1];
-			double d = this.citiesData.Distance(c1, c2);	// important to note, it says that this is the most time consuming part of the program
-			answer += d;									// (not to write but to count)
-		}													// although I guess that it still depends
-		return answer;
-	}
-	
+
 	public void Solve(boolean doProgressBar){		// simulates the behavior of bees to solve the problem
 		boolean pb = doProgressBar;
 		int numberOfSymbolsToPrint = 10;
@@ -208,19 +127,19 @@ public class Hive {
 	//Three helper methods for solve
 	//THe first one is most complex, or at least it says it should be.
 	private void ProcessActiveBee(int i){
-		char[] neighbor = GenerateNeighborMemoryMatrix(bees[i].memoryMatrix);
-		double neighborQuality = MeasureOfQuality(neighbor);
+		Solution neighborSolution = bees[i].solution.getSimilarSolution();
+		Integer neighborQuality = neighborSolution.fitnessGreaterIsBetter();
 		double prob = random.nextDouble();
 		boolean memoryWasUpdated = false;
 		boolean numberOfVisitsOverLimit = false;
 		
-		if(neighborQuality < bees[i].measureOfQuality) {	// found better neighbor
+		if(neighborQuality > bees[i].measureOfQuality) {	// found better neighbor
 			if(prob < probMistake) {	//mistake
 				++bees[i].numberOfVisits;
 				if(bees[i].numberOfVisits > maxNumberVisits)
 					numberOfVisitsOverLimit = true;
 			}else{	// no mistake
-				bees[i].memoryMatrix = neighbor.clone();
+				bees[i].solution = neighborSolution.clone();
 				bees[i].measureOfQuality = neighborQuality;
 				bees[i].numberOfVisits = 0;
 				memoryWasUpdated = true;
@@ -228,7 +147,7 @@ public class Hive {
 		}
 		else{ // did not find better neighbor
 			if(prob < probMistake){ //mistake
-				bees[i].memoryMatrix = neighbor.clone();
+				bees[i].solution = neighborSolution.clone();
 				bees[i].measureOfQuality = neighborQuality;
 				bees[i].numberOfVisits = 0;
 				memoryWasUpdated = true;
@@ -248,8 +167,8 @@ public class Hive {
 			indexesOfInactiveBees[x] = i;
 		}
 		else if (memoryWasUpdated){
-			if(bees[i].measureOfQuality < this.bestMeasureOfQuality){		//this kind of doesn't make sense
-				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();		// or no wait, it does make sense because the lower the better
+			if(bees[i].measureOfQuality > this.bestMeasureOfQuality){
+				this.bestSolution = bees[i].solution.clone();
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
 			}
 			DoWaggleDance(i); //what??
@@ -260,13 +179,13 @@ public class Hive {
 	}
 	
 	public void ProcessScoutBee(int i){		// I am not sure whatever scout actually does anything useful but whatever
-		char[] randomFoodSource = GenerateRandomMemeoryMatrix();
-		double randomFoodSourceQuality = MeasureOfQuality(randomFoodSource);
-		if(randomFoodSourceQuality < bees[i].measureOfQuality){
-			bees[i].memoryMatrix = randomFoodSource.clone();
+		Solution randomFoodSource = problem.getRandomSolution();
+		Integer randomFoodSourceQuality = randomFoodSource.fitnessGreaterIsBetter();
+		if(randomFoodSourceQuality > bees[i].measureOfQuality){
+			bees[i].solution = randomFoodSource.clone();
 			bees[i].measureOfQuality = randomFoodSourceQuality;
-			if(bees[i].measureOfQuality < bestMeasureOfQuality){
-				this.bestMemoryMatrix = bees[i].memoryMatrix.clone();
+			if(bees[i].measureOfQuality > bestMeasureOfQuality){
+				this.bestSolution = bees[i].solution.clone();
 				this.bestMeasureOfQuality = bees[i].measureOfQuality;
 			}
 			DoWaggleDance(i);
@@ -278,10 +197,10 @@ public class Hive {
 											// it conveys information to inactive bees in the hive
 		for(int j = 0; j < numberInactive; j++){
 			int b = indexesOfInactiveBees[j];
-			if (bees[i].measureOfQuality < bees[b].measureOfQuality){
+			if (bees[i].measureOfQuality > bees[b].measureOfQuality){
 				double p = random.nextDouble();
 				if(this.probPersuasion > p){
-					bees[b].memoryMatrix = bees[i].memoryMatrix.clone();
+					bees[b].solution = bees[i].solution.clone();
 					bees[b].measureOfQuality = bees[i].measureOfQuality;
 				}
 			}
