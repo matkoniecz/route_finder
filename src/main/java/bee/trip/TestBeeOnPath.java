@@ -14,7 +14,7 @@ public class TestBeeOnPath {
         graph.generateLeafletHtmlView("test.html");
         System.out.println("\nBegin Simulated Bee Colony algorithm\n");
         System.out.println("Finding good path on OSM data");
-        Hive hive = new Hive(100, 20, 50, 30, 100, 100, new Location(test, 4.0));
+        Hive hive = new Hive(100, 20, 50, 30, 100, 10, new Location(test, 4.0));
         System.out.println("\nInitial random hive");
         //System.out.println(hive.bestMemoryMatrix);
         System.out.println(hive.bestMeasureOfQuality);
