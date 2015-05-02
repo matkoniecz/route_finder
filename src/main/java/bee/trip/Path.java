@@ -4,6 +4,7 @@ import bee.Solution;
 import graph.Edge;
 import graph.Graph;
 
+import java.util.List;
 import java.util.Random;
 
 public class Path implements Solution {
@@ -45,9 +46,11 @@ public class Path implements Solution {
     public void mutate() {
         Random random = new Random();
         if(random.nextBoolean()){
-            startNode = location.getRandomEdge().from;
+            List<Edge> next = location.graph.nodes.get(startNode).outgoingWays;
+            startNode = next.get((new Random()).nextInt(next.size())).to;
         }else{
-            endNode = location.getRandomEdge().to;
+            List<Edge> next = location.graph.nodes.get(endNode).outgoingWays;
+            endNode = next.get((new Random()).nextInt(next.size())).to;
         }
     }
 
