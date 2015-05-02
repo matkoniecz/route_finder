@@ -194,7 +194,7 @@ public class Graph {
             sumLat += to_lat;
             summed += 2;
         }
-        writer.print(getLeafletHeader(sumLat/summed, sumLon/summed));
+        writer.print(getLeafletHeader(sumLat / summed, sumLon / summed));
         //TODO - is there any nicer way to find max and min?
         Integer max = Integer.MIN_VALUE;
         Integer min = Integer.MAX_VALUE;
@@ -205,19 +205,22 @@ public class Graph {
             }
         }
         for(Edge e: ways){
-            Double from_lat = nodes.get(e.from).location.latitude;
-            Double from_lon = nodes.get(e.from).location.longitude;
-            Double to_lat = nodes.get(e.to).location.latitude;
-            Double to_lon = nodes.get(e.to).location.longitude;
-            Integer rescaled = 100;
-            if(!Objects.equals(max, min)){
-                rescaled = (100 * ((e.rateWay()-min)/(max-min)));
-            }
-            String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\", opacity: 1}).addTo(map); //"+e.from + " to " + e.to;
-            writer.println(polyline);
+            writer.println(getLeafletPolylineStringFromEdge(e, max, min));
         }
         writer.print(getLeafletFooter());
         writer.close();
+    }
+
+    private String getLeafletPolylineStringFromEdge(Edge e, Integer max, Integer min) {
+        Double from_lat = nodes.get(e.from).location.latitude;
+        Double from_lon = nodes.get(e.from).location.longitude;
+        Double to_lat = nodes.get(e.to).location.latitude;
+        Double to_lon = nodes.get(e.to).location.longitude;
+        Integer rescaled = 100;
+        if(!Objects.equals(max, min)){
+            rescaled = (100 * ((e.rateWay()-min)/(max-min)));
+        }
+        return "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\", opacity: 1}).addTo(map); //"+e.from + " to " + e.to;
     }
 
     public static String getColor(int percent) {
