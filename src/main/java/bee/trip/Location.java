@@ -6,8 +6,6 @@ import graph.Edge;
 import graph.Graph;
 import osm_processing.OSMDataDownloader;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class Location implements Problem {
@@ -24,7 +22,7 @@ public class Location implements Problem {
         Edge eStart = getRandomEdge();
         Edge eEnd = getRandomEdge();
         Long start = eStart.from;
-        Long end = eStart.to;
+        Long end = eEnd.to;
         return new Path(start, end, this);
     }
 
@@ -34,8 +32,7 @@ public class Location implements Problem {
     }
 
     public Edge getRandomEdge(){
-        List<Long> keysAsArray = new ArrayList<Long>(graph.ways.keySet());
         Random r = new Random();
-        return graph.ways.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+        return graph.ways.get(r.nextInt(graph.ways.size()));
     }
 }

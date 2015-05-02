@@ -16,10 +16,10 @@ import java.util.List;
 
 public class Graph {
     public HashMap<Long, Vertex> nodes;
-    public HashMap<Long, Edge> ways;
+    public List<Edge> ways;
     public Graph(){
         nodes = new HashMap<>();
-        ways = new HashMap<>();
+        ways = new ArrayList<>();
     }
 
     public Graph findPath(Long nodeA, Long nodeB){
@@ -86,8 +86,7 @@ public class Graph {
         }
         Graph returned = new Graph();
         Long node = nodeB;
-        Edge toNode = null;
-        Long fakeWayId = (long) 0;
+        Edge toNode;
         while(true){
             toNode = prev.get(node);
             if(toNode == null){
@@ -96,8 +95,7 @@ public class Graph {
                 }
                 break;
             }
-            returned.ways.put(fakeWayId, toNode);
-            fakeWayId++;
+            returned.ways.add(toNode);
             returned.nodes.put(node, this.nodes.get(node));
             node = toNode.from;
         }
@@ -108,11 +106,10 @@ public class Graph {
     public Graph(String pathToOSMXmlFile){
         this();
 
-        HashMap<Long, Edge> potentialWays = new HashMap<>();
+        List<Edge> potentialWays = new ArrayList<>();
         HashMap<String, String> tags = new HashMap<>();
         Long previous_node = null;
         Long id;
-        Long fake_way_id = Long.parseLong("0");
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
         try {
@@ -139,11 +136,10 @@ public class Graph {
                                     "trunk_link", "unclassified");
                             //new way, process old one
                             if(potentialWays.size()>0){
-                                //System.out.println(tags);
                                 if(tags.containsKey("highway")){
                                     if(roads.contains(tags.get("highway"))){
-                                        ways.putAll(potentialWays);
-                                        for(Edge way: potentialWays.values()){
+                                        ways.addAll(potentialWays);
+                                        for(Edge way: potentialWays){
                                             if(nodes.get(way.from) != null){
                                                 nodes.get(way.from).outgoingWays.add(way);
                                             }
@@ -151,21 +147,17 @@ public class Graph {
                                     }
                                 }
                             }
-                            potentialWays = new HashMap<>();
+                            potentialWays = new ArrayList<>();
                             tags = new HashMap<>();
 
-                            //System.out.println(type);
-                            id = new Long(startElement.getAttributeByName(new QName("id")).getValue());
+                            //id = new Long(startElement.getAttributeByName(new QName("id")).getValue());
                             previous_node = null;
                             break;
                         case "nd": {
-                            //System.out.println(type);
                             Long node_id = new Long(startElement.getAttributeByName(new QName("ref")).getValue());
-                            //System.out.println(previous_node);
-                            //System.out.println(node_id);
                             if (previous_node != null) {
-                                potentialWays.put(fake_way_id++, new Edge(previous_node, node_id, tags, nodes));
-                                potentialWays.put(fake_way_id++, new Edge(node_id, previous_node, tags, nodes));
+                                potentialWays.add(new Edge(previous_node, node_id, tags, nodes));
+                                potentialWays.add(new Edge(node_id, previous_node, tags, nodes));
                             }
                             previous_node = node_id;
                             break;
@@ -186,7 +178,7 @@ public class Graph {
     }
 
     public void generateLeafletHtmlView(String filename) {
-        PrintWriter writer = null;
+        PrintWriter writer;
         try {
             writer = new PrintWriter(filename, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -196,17 +188,39 @@ public class Graph {
             e.printStackTrace();
             throw new IllegalArgumentException(e);
         }
-        writer.print(getLeafletHeader());
+        Double sumLon = 0.0;
+        Double sumLat = 0.0;
+        Integer summed = 0;
+        for(Edge e: ways) {
+            try {
+                //System.out.println(e.from);
+                //System.out.println(e.to);
+                Double from_lat = nodes.get(e.from).location.latitude;
+                Double from_lon = nodes.get(e.from).location.longitude;
+                Double to_lat = nodes.get(e.to).location.latitude;
+                Double to_lon = nodes.get(e.to).location.longitude;
+                sumLon += from_lon;
+                sumLon += to_lon;
+                sumLat += from_lat;
+                sumLat += to_lat;
+                summed += 2;
+            } catch(NullPointerException exception){
+                //exception.printStackTrace();
+                //System.err.println(e.from + " to " + e.to);
+                //TODO handle this properly (expected for ways going outside downloaded area)
+            }
+        }
+        writer.print(getLeafletHeader(sumLat/summed, sumLon/summed));
         //TODO - is there any nicer way to find max and min?
         Integer max = -1;
         Integer min = 1000000000;
-        for(Edge e: ways.values()){
+        for(Edge e: ways){
             if(e.rateWay() != null){
                 max = Math.max(max, e.rateWay());
                 min = Math.min(min, e.rateWay());
             }
         }
-        for(Edge e: ways.values()){
+        for(Edge e: ways){
             try{
                 //System.out.println(e.from);
                 //System.out.println(e.to);
@@ -218,7 +232,7 @@ public class Graph {
                 if(!Objects.equals(max, min)){
                     rescaled = (100 * ((e.rateWay()-min)/(max-min)));
                 }
-                String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\"}).addTo(map); //"+e.from + " to " + e.to;
+                String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\", opacity: 1}).addTo(map); //"+e.from + " to " + e.to;
                 //System.out.println(polyline);
                 writer.println(polyline);
             } catch(NullPointerException exception){
@@ -233,18 +247,15 @@ public class Graph {
 
     public static String getColor(int percent) {
         //from http://stackoverflow.com/questions/340209/generate-colors-between-red-and-green-for-a-power-meter
-        //System.out.println(percent/100.0);
-        double H = percent/100.0*0.4; // Hue (note 0.4 = Green, see huge chart below)
-        double S = 0.9; // Saturation
-        double B = 0.9; // Brightness
+        float hue = (float) (percent/100.0*0.4); // 0.4 = Green, see chart in page linked above
+        float saturation = 0.9f;
+        float brightness = 0.9f;
 
-        int intColor = Color.HSBtoRGB((float) H, (float) S, (float) B);
-        String hexColor = String.format("#%06X", (0xFFFFFF & intColor));
-        //System.out.println(hexColor);
-        return hexColor; //Color.getHSBColor((float)H, (float)S, (float)B);
+        int intColor = Color.HSBtoRGB(hue, saturation, brightness);
+        return String.format("#%06X", (0xFFFFFF & intColor)); //Color.getHSBColor((float)H, (float)S, (float)B);
     }
 
-    private String getLeafletHeader() {
+    private String getLeafletHeader(Double latitudeCenter, Double longitudeCenter) {
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
@@ -268,14 +279,14 @@ public class Graph {
                 "\n" +
                 "\t<script src=\"http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js\"></script>\n" +
                 "\t<script>\n" +
-                "\t\tvar map = L.map('map').setView([50, 20], 15);\n" +
+                "\t\tvar map = L.map('map').setView(["+latitudeCenter+", "+longitudeCenter+"], 15);\n" +
                 "\t\tmapLink = '<a href=\"http://openstreetmap.org\">OpenStreetMap</a>';\n"+
                 getOSMDefaultStyleTiles();
     }
     private String getOSMDefaultStyleTiles() {
         return  "\t\tL.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n" +
                 "\t\t\tmaxZoom: 18,\n" +
-                "\t\t\tattribution: '&copy; ' + mapLink + ' Contributors',\n" +
+                "\t\t\tattribution: '&copy; ' + mapLink + ' Contributors'\n" +
                 "\t\t}).addTo(map);\n";
     }
 

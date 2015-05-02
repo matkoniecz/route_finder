@@ -9,12 +9,12 @@ import java.io.IOException;
 
 public class TestBeeOnPath {
     public static void main(String[] args) throws IOException {
-        OSMDataDownloader test = new OSMDataDownloader(50, 20, 0.01);
+        OSMDataDownloader test = new OSMDataDownloader(50.05, 19.85, 0.05);
         Graph graph = new Graph(test.getCacheFilename());
         graph.generateLeafletHtmlView("test.html");
         System.out.println("\nBegin Simulated Bee Colony algorithm\n");
         System.out.println("Finding good path on OSM data");
-        Hive hive = new Hive(100, 20, 50, 30, 100, 100, new Location(test, 10.0));
+        Hive hive = new Hive(100, 20, 50, 30, 100, 100, new Location(test, 4.0));
         System.out.println("\nInitial random hive");
         //System.out.println(hive.bestMemoryMatrix);
         System.out.println(hive.bestMeasureOfQuality);

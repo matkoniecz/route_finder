@@ -25,7 +25,7 @@ public class Path implements Solution {
         }
         double length = 0;
         Integer attractiveness = 0;
-        for(Edge e: path.ways.values()) {
+        for(Edge e: path.ways) {
             length += e.lengthInKilometers;
             attractiveness += e.rateWay();
         }
