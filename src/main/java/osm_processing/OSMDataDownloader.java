@@ -15,6 +15,7 @@ public class OSMDataDownloader {
     private final double latitude_of_center;
     private final double longitude_of_center;
     private final double delta_in_degrees;
+    private static final int QUERY_VERSION = 1; //increase on changing what is downloaded to invalidate caches
     public OSMDataDownloader(double latitude_of_center, double longitude_of_center, double delta_in_degrees) throws IOException {
         this.latitude_of_center = latitude_of_center;
         this.longitude_of_center = longitude_of_center;
@@ -27,11 +28,12 @@ public class OSMDataDownloader {
         String lower_bottom_corner = (latitude_of_center-delta_in_degrees) + "," + (longitude_of_center-delta_in_degrees);
         String upper_right_corner = (latitude_of_center+delta_in_degrees) + "," + (longitude_of_center+delta_in_degrees);
         String bb = lower_bottom_corner + "," + upper_right_corner;
-        return "http://overpass-api.de/api/interpreter?data=" + URLEncoder.encode("(node("+bb+");<;);out meta;", "UTF-8");
+        //see http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Completed_ways_and_relations for documentation of query
+        return "http://overpass-api.de/api/interpreter?data=" + URLEncoder.encode("(node("+bb+");<;>;);out meta;", "UTF-8");
     }
 
     public String getCacheFilename(){
-        return latitude_of_center+","+longitude_of_center+"("+delta_in_degrees+")"+".osm";
+        return latitude_of_center+","+longitude_of_center+"("+delta_in_degrees+")"+"-v"+QUERY_VERSION+".osm";
     }
 
     public String GetDataFromUrl() throws IOException {

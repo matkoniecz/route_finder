@@ -16,12 +16,7 @@ public class Edge {
         this.tags = tags;
         Vertex from_node = nodes.get(from);
         Vertex to_node = nodes.get(to);
-        if(from_node == null || to_node == null){
-            lengthInKilometers = null;
-        } else {
-            lengthInKilometers = DistanceCalculator.getDistanceBetweenCoordinatesInKilometers(from_node.location, to_node.location);
-        }
-
+        lengthInKilometers = DistanceCalculator.getDistanceBetweenCoordinatesInKilometers(from_node.location, to_node.location);
     }
 
     public Integer rateWay(){

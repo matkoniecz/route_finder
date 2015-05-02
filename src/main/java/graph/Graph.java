@@ -56,13 +56,7 @@ public class Graph {
         while(potential.size()>0){
             Entry candidate = potential.peek();
             potential.remove(candidate);
-            if(nodes.get(candidate.nodeId)==null){
-                continue;
-            }
             for(Edge e: nodes.get(candidate.nodeId).outgoingWays){
-                if(e.lengthInKilometers == null){
-                    continue;
-                }
                 if(e.from.equals(candidate.nodeId)){
                     boolean update = false;
                     double newPotentialLength = candidate.distance + e.lengthInKilometers;
@@ -140,9 +134,7 @@ public class Graph {
                                     if(roads.contains(tags.get("highway"))){
                                         ways.addAll(potentialWays);
                                         for(Edge way: potentialWays){
-                                            if(nodes.get(way.from) != null){
-                                                nodes.get(way.from).outgoingWays.add(way);
-                                            }
+                                            nodes.get(way.from).outgoingWays.add(way);
                                         }
                                     }
                                 }
@@ -192,28 +184,20 @@ public class Graph {
         Double sumLat = 0.0;
         Integer summed = 0;
         for(Edge e: ways) {
-            try {
-                //System.out.println(e.from);
-                //System.out.println(e.to);
-                Double from_lat = nodes.get(e.from).location.latitude;
-                Double from_lon = nodes.get(e.from).location.longitude;
-                Double to_lat = nodes.get(e.to).location.latitude;
-                Double to_lon = nodes.get(e.to).location.longitude;
-                sumLon += from_lon;
-                sumLon += to_lon;
-                sumLat += from_lat;
-                sumLat += to_lat;
-                summed += 2;
-            } catch(NullPointerException exception){
-                //exception.printStackTrace();
-                //System.err.println(e.from + " to " + e.to);
-                //TODO handle this properly (expected for ways going outside downloaded area)
-            }
+            Double from_lat = nodes.get(e.from).location.latitude;
+            Double from_lon = nodes.get(e.from).location.longitude;
+            Double to_lat = nodes.get(e.to).location.latitude;
+            Double to_lon = nodes.get(e.to).location.longitude;
+            sumLon += from_lon;
+            sumLon += to_lon;
+            sumLat += from_lat;
+            sumLat += to_lat;
+            summed += 2;
         }
         writer.print(getLeafletHeader(sumLat/summed, sumLon/summed));
         //TODO - is there any nicer way to find max and min?
-        Integer max = -1;
-        Integer min = 1000000000;
+        Integer max = Integer.MIN_VALUE;
+        Integer min = Integer.MAX_VALUE;
         for(Edge e: ways){
             if(e.rateWay() != null){
                 max = Math.max(max, e.rateWay());
@@ -221,25 +205,16 @@ public class Graph {
             }
         }
         for(Edge e: ways){
-            try{
-                //System.out.println(e.from);
-                //System.out.println(e.to);
-                Double from_lat = nodes.get(e.from).location.latitude;
-                Double from_lon = nodes.get(e.from).location.longitude;
-                Double to_lat = nodes.get(e.to).location.latitude;
-                Double to_lon = nodes.get(e.to).location.longitude;
-                Integer rescaled = 100;
-                if(!Objects.equals(max, min)){
-                    rescaled = (100 * ((e.rateWay()-min)/(max-min)));
-                }
-                String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\", opacity: 1}).addTo(map); //"+e.from + " to " + e.to;
-                //System.out.println(polyline);
-                writer.println(polyline);
-            } catch(NullPointerException exception){
-                //exception.printStackTrace();
-                //System.err.println(e.from + " to " + e.to);
-                //TODO handle this properly (expected for ways going outside downloaded area)
+            Double from_lat = nodes.get(e.from).location.latitude;
+            Double from_lon = nodes.get(e.from).location.longitude;
+            Double to_lat = nodes.get(e.to).location.latitude;
+            Double to_lon = nodes.get(e.to).location.longitude;
+            Integer rescaled = 100;
+            if(!Objects.equals(max, min)){
+                rescaled = (100 * ((e.rateWay()-min)/(max-min)));
             }
+            String polyline = "L.polyline([["+from_lat+","+from_lon+"], ["+to_lat+","+to_lon+"]], {color: \""+getColor(rescaled)+"\", opacity: 1}).addTo(map); //"+e.from + " to " + e.to;
+            writer.println(polyline);
         }
         writer.print(getLeafletFooter());
         writer.close();
