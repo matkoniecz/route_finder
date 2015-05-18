@@ -45,6 +45,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelTotal = new JLabel("Bees total:");
 					totalP.add(labelTotal,BorderLayout.WEST);
 					beesTotal = new JTextField("10");
+					beesTotal.setEditable(true);
 					totalP.add(beesTotal,BorderLayout.CENTER);
 					totalP.setMaximumSize(new Dimension(beesTotal.getMaximumSize().width,beesTotal.getPreferredSize().height));
 				left.add(totalP);
@@ -53,6 +54,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelInactive = new JLabel("Inactive bees:");
 					inactiveP.add(labelInactive, BorderLayout.WEST);
 					beesInactive = new JTextField("2");
+					beesInactive.setEditable(true);
 					inactiveP.add(beesInactive, BorderLayout.CENTER);
 					inactiveP.setMaximumSize(new Dimension(beesInactive.getMaximumSize().width,beesInactive.getPreferredSize().height));
 				left.add(inactiveP);
@@ -61,6 +63,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelActive = new JLabel("Active bees:");
 					activeP.add(labelActive, BorderLayout.WEST);
 					beesActive = new JTextField("5");
+					beesInactive.setEditable(true);
 					activeP.add(beesActive, BorderLayout.CENTER);
 					activeP.setMaximumSize(new Dimension(beesActive.getMaximumSize().width,beesActive.getPreferredSize().height));
 				left.add(activeP);
@@ -69,6 +72,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelScout = new JLabel("Scout bees:");
 					scoutP.add(labelScout, BorderLayout.WEST);
 					beesScout = new JTextField("3");
+					beesScout.setEditable(true);
 					scoutP.add(beesScout, BorderLayout.CENTER);
 					scoutP.setMaximumSize(new Dimension(beesScout.getMaximumSize().width,beesScout.getPreferredSize().height));
 				left.add(scoutP);
@@ -77,6 +81,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelVisits = new JLabel("Max visits:");
 					visitsP.add(labelVisits, BorderLayout.WEST);
 					visits = new JTextField("100");
+					visits.setEditable(true);
 					visitsP.add(visits, BorderLayout.CENTER);
 					visitsP.setMaximumSize(new Dimension(visits.getMaximumSize().width,visits.getPreferredSize().height));
 				left.add(visitsP);
@@ -85,6 +90,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					JLabel labelCycles = new JLabel("Max cycles:");
 					cyclesP.add(labelCycles, BorderLayout.WEST);
 					cycles = new JTextField("500");
+					cycles.setEditable(true);
 					cyclesP.add(cycles, BorderLayout.CENTER);
 					cyclesP.setMaximumSize(new Dimension(cycles.getMaximumSize().width,cycles.getPreferredSize().height));
 				left.add(cyclesP);
