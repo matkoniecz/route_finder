@@ -23,21 +23,21 @@ public class Graph {
     }
 
     public Graph findPath(Long nodeA, Long nodeB){
-        class Entry implements Comparable{
+        class SearchEntry implements Comparable{
             Long nodeId;
             double distance;
 
-            public Entry(Long nodeId, double distance) {
+            public SearchEntry(Long nodeId, double distance) {
                 this.nodeId = nodeId;
                 this.distance = distance;
             }
 
             @Override
             public int compareTo(Object o) {
-                if(!(o instanceof Entry)){
+                if(!(o instanceof SearchEntry)){
                     throw new IllegalArgumentException();
                 }
-                Entry alien = (Entry) o;
+                SearchEntry alien = (SearchEntry) o;
                 if(distance < alien.distance){
                     return -1;
                 }
@@ -49,33 +49,33 @@ public class Graph {
         }
         HashMap<Long, Double> distance =  new HashMap<>();
         HashMap<Long, Edge> prev =  new HashMap<>();
-        PriorityQueue<Entry> potential = new PriorityQueue<>();
+        PriorityQueue<SearchEntry> potential = new PriorityQueue<>();
         distance.put(nodeA, 0.0);
         prev.put(nodeA, null);
-        potential.add(new Entry(nodeA, 0));
+        potential.add(new SearchEntry(nodeA, 0));
         while(potential.size()>0){
-            Entry candidate = potential.peek();
+            SearchEntry candidate = potential.peek();
             potential.remove(candidate);
-            for(Edge e: nodes.get(candidate.nodeId).outgoingWays){
-                if(e.from.equals(candidate.nodeId)){
-                    boolean update = false;
-                    double newPotentialLength = candidate.distance + e.lengthInKilometers;
-                    if(!distance.containsKey(e.to)){
+            Vertex node = nodes.get(candidate.nodeId);
+            for(Edge e: node.outgoingWays){
+                boolean update = false;
+                double newPotentialLength = candidate.distance + e.lengthInKilometers;
+                if(!distance.containsKey(e.to)){
+                    update = true;
+                } else {
+                    if(distance.get(e.to)>newPotentialLength){
                         update = true;
-                    } else {
-                        if(distance.get(e.to)>newPotentialLength){
-                            update = true;
-                        }
                     }
-                    if(update){
-                        distance.put(e.to, newPotentialLength);
-                        prev.put(e.to, e);
-                        potential.add(new Entry(e.to, newPotentialLength));
-                    }
+                }
+                if(update){
+                    distance.put(e.to, newPotentialLength);
+                    prev.put(e.to, e);
+                    potential.add(new SearchEntry(e.to, newPotentialLength));
                 }
             }
         }
         if(!distance.containsKey(nodeB)){
+            //System.out.println("failed to find path: " + nodeA + " to " + nodeB);
             return null;
         }
         Graph returned = new Graph();
@@ -280,5 +280,10 @@ public class Graph {
         return "\t</script>\n" +
                 "</body>\n" +
                 "</html>\n";
+    }
+
+    public void merge(Graph added){
+        nodes.putAll(added.nodes);
+        ways.addAll(added.ways);
     }
 }
