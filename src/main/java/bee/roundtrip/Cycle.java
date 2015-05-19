@@ -10,6 +10,7 @@ public class Cycle implements Solution {
     List<Long> nodes;
     Location location;
     List<Graph> paths;
+    String scoringDescription;
     public Cycle(List<Long> nodes, Location location) {
         if(nodes.size()<=2){
             throw new AssertionError("too small list ");
@@ -35,6 +36,7 @@ public class Cycle implements Solution {
         double length = 0;
         double lengthReused = 0;
         Integer attractiveness = 0;
+        Integer reusedPenalty = 0;
         HashSet<Edge> used = new LinkedHashSet<>();
         for(Graph g: paths){
             if(g == null){
@@ -43,23 +45,34 @@ public class Cycle implements Solution {
             for(Edge e: g.ways) {
                 length += e.lengthInKilometers;
                 if(used.contains(e)){
-                    attractiveness -= (int) (10000 * e.lengthInKilometers);
+                    reusedPenalty += (int) (10000 * e.lengthInKilometers);
                     lengthReused += e.lengthInKilometers;
+                    if(e.rateWay()<0){
+                        attractiveness += e.rateWay();
+                    }
                 } else {
                     attractiveness += e.rateWay();
                     used.add(e);
+                    for(Edge potentialDuplicate: location.graph.nodes.get(e.to).outgoingWays){
+                        if(Objects.equals(potentialDuplicate.to, e.from)){
+                            used.add(potentialDuplicate);
+                        }
+                    }
                 }
             }
         }
-        Double delta = Math.abs(length - location.wantedLength);
-        Double deltaMagnified = Math.pow(delta,3)*1000;
-        Double returned = attractiveness - Math.max(0, deltaMagnified - 3000);
-        int percentReused = (int) (100*length/lengthReused);
+        int percentReused = (int) (100*lengthReused/length);
         int percentOriginal = 100 - percentReused;
-        int score = returned.intValue();
-        if (score>0){
-            score = score*percentOriginal*percentOriginal*percentOriginal;
-        }
+        Double delta = Math.abs(length - location.wantedLength);
+        delta = Math.max(0, delta - 1);
+        Double deltaMagnified = delta*delta*100;
+        Integer lengthPenalty = deltaMagnified.intValue();
+        Integer score = attractiveness - lengthPenalty - reusedPenalty;
+        int bonusPenalty = percentReused*Math.abs(score)/100;
+        reusedPenalty += bonusPenalty;
+        score -= bonusPenalty;
+        scoringDescription = "attractiveness: " + attractiveness + ", lengthPenalty: " + lengthPenalty + ", reusedPenalty: "+reusedPenalty +" #" + percentReused + "%";
+        System.out.println(scoringDescription+"\n");
         return score;
     }
 
@@ -107,6 +120,8 @@ public class Cycle implements Solution {
         for(Long n: nodes){
             returned += n + " -> ";
         }
-        return returned;
+        fitnessGreaterIsBetter();
+        return returned + "\n" + scoringDescription;
     }
+
 }
