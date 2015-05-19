@@ -31,7 +31,8 @@ public class Path implements Solution {
             attractiveness += e.rateWay();
         }
         Double delta = Math.abs(length-location.wantedLength);
-        Double returned = attractiveness - Math.pow(delta,3)*1000;
+        Double deltaMagnified = Math.pow(delta,3)*1000;
+        Double returned = attractiveness - Math.max(0, deltaMagnified-3000);
         return returned.intValue();
     }
 
