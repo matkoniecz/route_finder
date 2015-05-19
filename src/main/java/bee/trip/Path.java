@@ -43,7 +43,6 @@ public class Path implements Solution {
         return mutated;
     }
 
-    @Override
     public void mutate() {
         Random random = new Random();
         if(random.nextBoolean()){

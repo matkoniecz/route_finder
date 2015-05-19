@@ -27,7 +27,7 @@ public class CitiesSolution implements Solution {
 
     @Override
     public Solution getSimilarSolution() {
-        Solution mutated = this.clone();
+        CitiesSolution mutated = this.clone();
         mutated.mutate();
         return mutated;
     }
