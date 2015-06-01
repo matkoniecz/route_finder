@@ -27,7 +27,7 @@ public class TestGUI extends JFrame implements ActionListener{
 	 * 
 	 */
 	private static final long serialVersionUID = -7243286810278326679L;
-	private JTextField beesTotal;
+	//private JTextField beesTotal;
 	private JTextField beesInactive;
 	private JTextField beesActive;
 	private JTextField beesScout;
@@ -41,6 +41,7 @@ public class TestGUI extends JFrame implements ActionListener{
 		
 			JPanel left = new JPanel();
 			left.setLayout(new BoxLayout(left,BoxLayout.Y_AXIS));
+			/*
 				JPanel totalP = new JPanel(new BorderLayout());
 					JLabel labelTotal = new JLabel("Bees total:");
 					totalP.add(labelTotal,BorderLayout.WEST);
@@ -49,7 +50,7 @@ public class TestGUI extends JFrame implements ActionListener{
 					totalP.add(beesTotal,BorderLayout.CENTER);
 					totalP.setMaximumSize(new Dimension(beesTotal.getMaximumSize().width,beesTotal.getPreferredSize().height));
 				left.add(totalP);
-				
+				*/
 				JPanel inactiveP = new JPanel(new BorderLayout());
 					JLabel labelInactive = new JLabel("Inactive bees:");
 					inactiveP.add(labelInactive, BorderLayout.WEST);
@@ -138,7 +139,7 @@ public class TestGUI extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent arg0) {
 		clearFeedback();
 		
-		int totalB = Integer.parseInt(beesTotal.getText());
+		//int totalB = Integer.parseInt(beesTotal.getText());
 		int inactiveB = Integer.parseInt(beesInactive.getText());
 		int activeB = Integer.parseInt(beesActive.getText());
 		int scoutB = Integer.parseInt(beesScout.getText());
@@ -151,11 +152,18 @@ public class TestGUI extends JFrame implements ActionListener{
 			
 			writeLine("Calculating route...");
 			
-			Hive hive = new Hive(totalB, inactiveB, activeB, scoutB, visitsNo, cyclesNo, new Location(test, 10.0));
+			long startTime = System.currentTimeMillis();
+			
+			Hive hive = new Hive(inactiveB+activeB+scoutB, inactiveB, activeB, scoutB, visitsNo, cyclesNo, new Location(test, 10.0));
 			hive.Solve(false);
 			
-			writeLine("Best solution quality:");
-			writeLine(hive.bestMeasureOfQuality.toString());
+			long stopTime = System.currentTimeMillis();
+			long elapsedTime = (stopTime - startTime)/1000;
+			
+			writeLine("Best solution quality: "+hive.bestMeasureOfQuality.toString());
+			
+			writeLine("Calculations took "+elapsedTime+" seconds");
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
