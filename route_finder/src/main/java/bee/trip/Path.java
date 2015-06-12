@@ -11,7 +11,7 @@ public class Path implements Solution {
     Long startNode;
     Long endNode;
     Location location;
-    Graph path;
+    public Graph path;
     public Path(Long startNode, Long endNode, Location location) {
         this.startNode = startNode;
         this.endNode = endNode;

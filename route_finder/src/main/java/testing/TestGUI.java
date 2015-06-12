@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -36,7 +37,7 @@ public class TestGUI extends JFrame implements ActionListener{
 	private JTextField visits;
 	private JTextField cycles;
 	
-	private static final String[] testCases = {"CyclesTest","VisitsTest"};
+	private static final String[] testCases = {"CyclesTest","VisitsTest","BeesTotalTest"};
 	private JComboBox<String> testCasesBox;
 	
 	private JScrollPane feedbackPane;
@@ -129,7 +130,7 @@ public class TestGUI extends JFrame implements ActionListener{
 									try {
 										testCycles();
 									} catch (IOException e) {
-										// TODO Auto-generated catch block
+										
 										e.printStackTrace();
 									}
 								}
@@ -153,8 +154,24 @@ public class TestGUI extends JFrame implements ActionListener{
 							});
 							t.start();
 							break;
+						case "BeesTotalTest":
+							t = new Thread(new Runnable(){
+
+								@Override
+								public void run() {
+									try {
+										testBeesTotal();
+									} catch (IOException e) {
+										
+										e.printStackTrace();
+									}
+								}
+								
+							});
+							t.start();
+							break;
 						default:
-							writeLine("sorry");
+							writeLine("sorry,nothing");
 							break;
 						}
 					
@@ -178,6 +195,40 @@ public class TestGUI extends JFrame implements ActionListener{
 		this.pack();
 		//this.setSize(400,400);
 		this.setVisible(true);
+	}
+
+	protected void testBeesTotal() throws IOException {
+		int inactiveB = Integer.parseInt(beesInactive.getText());
+		int activeB = Integer.parseInt(beesActive.getText());
+		int scoutB = Integer.parseInt(beesScout.getText());
+		int visitsNo = Integer.parseInt(visits.getText());
+		int cyclesNo = Integer.parseInt(cycles.getText());
+		
+		File fout = File.createTempFile("BeesTotalTest", ".csv",new File(Paths.get("").toAbsolutePath().toString()));
+		PrintWriter writer = new PrintWriter(fout);
+		
+		writer.println("Inactive,Active,Scout,Visits,Cycles,Quality,Cycle_found,Time(s)");
+		clearFeedback();
+		writeLine("Fetching data...");
+		
+		OSMDataDownloader test = new OSMDataDownloader(50.05, 19.85, 0.05);
+		
+		long startTime,stopTime,elapsedTime;
+		Hive hive;
+		for(int i=1;i<=50;i++){
+			writeLine("Calculating route with bees population multiplied by "+i);
+			startTime = System.currentTimeMillis();
+			hive = new Hive(inactiveB*i+activeB*i+scoutB*i, inactiveB, activeB, scoutB, visitsNo, cyclesNo, new Location(test, 10.0));
+			hive.Solve(false);
+			stopTime = System.currentTimeMillis();
+			elapsedTime = (stopTime - startTime)/1000;
+			
+			writer.println(inactiveB*i+","+activeB*i+","+scoutB*i+","+visitsNo+","+cyclesNo+","+hive.bestMeasureOfQuality+","+hive.bestSolutionCycle+","+elapsedTime);
+			
+		}
+		writeLine("Test is done.");
+		
+		writer.close();
 	}
 
 	public static void main(String[] args) {
@@ -246,7 +297,7 @@ public class TestGUI extends JFrame implements ActionListener{
 		int visitsNo;
 		int cyclesNo = Integer.parseInt(cycles.getText());
 		
-		File fout = new File("VisitsTest.txt");
+		File fout = File.createTempFile("VisitsTest", ".csv",new File(Paths.get("").toAbsolutePath().toString()));
 		PrintWriter writer = new PrintWriter(fout);
 		
 		writer.println("Inactive,Active,Scout,Visits,Cycles,Quality,Cycle_found,Time(s)");
@@ -280,7 +331,7 @@ public class TestGUI extends JFrame implements ActionListener{
 		int visitsNo = Integer.parseInt(visits.getText());
 		int cyclesNo;
 		
-		File fout = new File("CyclesTest.txt");
+		File fout = File.createTempFile("CyclesTest", ".csv",new File(Paths.get("").toAbsolutePath().toString()));
 		PrintWriter writer = new PrintWriter(fout);
 		
 		writer.println("Inactive,Active,Scout,Visits,Cycles,Quality,Cycle_found,Time(s)");
@@ -291,7 +342,7 @@ public class TestGUI extends JFrame implements ActionListener{
 		
 		long startTime,stopTime,elapsedTime;
 		Hive hive;
-		for(cyclesNo=50;cyclesNo<=500;cyclesNo+=50){
+		for(cyclesNo=10;cyclesNo<=500;cyclesNo+=10){
 			writeLine("Calculating route with "+cyclesNo+" cycles");
 			startTime = System.currentTimeMillis();
 			hive = new Hive(inactiveB+activeB+scoutB, inactiveB, activeB, scoutB, visitsNo, cyclesNo, new Location(test, 10.0));
