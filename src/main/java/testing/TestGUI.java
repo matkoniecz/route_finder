@@ -92,7 +92,7 @@ public class TestGUI extends JFrame implements ActionListener{
 				JPanel cyclesP = new JPanel(new BorderLayout());
 					JLabel labelCycles = new JLabel("Max cycles:");
 					cyclesP.add(labelCycles, BorderLayout.WEST);
-					cycles = new JTextField("500");
+					cycles = new JTextField("15");
 					cycles.setEditable(true);
 					cyclesP.add(cycles, BorderLayout.CENTER);
 					cyclesP.setMaximumSize(new Dimension(cycles.getMaximumSize().width,cycles.getPreferredSize().height));
