@@ -18,7 +18,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
 import bee.Hive;
-import bee.trip.Location;
+import bee.roundtrip.Cycle;
+import bee.roundtrip.Location;
+import graph.Graph;
 import osm_processing.OSMDataDownloader;
 
 public class TestGUI extends JFrame implements ActionListener{
@@ -163,7 +165,12 @@ public class TestGUI extends JFrame implements ActionListener{
 			writeLine("Best solution quality: "+hive.bestMeasureOfQuality.toString());
 			
 			writeLine("Calculations took "+elapsedTime+" seconds");
-			
+
+			Graph best = ((Cycle) hive.bestSolution).ToGraph();
+			String filename = "solution.html";
+			best.generateLeafletHtmlView(filename);
+
+			writeLine("Result saved to file " + filename);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

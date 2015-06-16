@@ -124,4 +124,12 @@ public class Cycle implements Solution {
         return returned + "\n" + scoringDescription;
     }
 
+    public Graph ToGraph(){
+        Graph merged = new Graph();
+        int i = 0;
+        for(Graph g: paths){
+            merged.merge(g);
+        }
+        return merged;
+    }
 }
