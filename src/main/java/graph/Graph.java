@@ -237,7 +237,7 @@ public class Graph {
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
-                "\t<title>Leaflet Quick Start Guide Example</title>\n" +
+                "\t<title>Znaleziona trasa</title>\n" +
                 "\t<meta charset=\"utf-8\" />\n" +
                 "\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "\t<link rel=\"stylesheet\" href=\"http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css\" />\n" +
