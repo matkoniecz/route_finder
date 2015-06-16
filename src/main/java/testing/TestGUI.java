@@ -39,7 +39,7 @@ public class TestGUI extends JFrame implements ActionListener{
 	private JTextArea feedback;
 
 	public TestGUI(){
-		this.setLayout(new GridLayout(1,2));
+		this.setLayout(new GridLayout(1,1));
 		
 			JPanel left = new JPanel();
 			left.setLayout(new BoxLayout(left,BoxLayout.Y_AXIS));
@@ -107,17 +107,12 @@ public class TestGUI extends JFrame implements ActionListener{
 			testB.addActionListener(this);
 			left.add(testB);
 		
-		JPanel right = new JPanel();
-		ImageIcon img = new ImageIcon("pholder.png");
-		right.add(new JLabel(img));
-		
 		this.add(left);
-		this.add(right);
-		
+
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.pack();
-		//this.setSize(400,400);
+		this.setSize(400,400);
 		this.setVisible(true);
 	}
 
